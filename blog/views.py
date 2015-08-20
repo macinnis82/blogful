@@ -1,6 +1,6 @@
 import mistune
 
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
 
 from blog import app
 from .database import session
@@ -34,16 +34,73 @@ def posts(page=1, paginate_by=10):
     total_pages=total_pages
   )
   
-@app.route("/post/add", methods=["GET"])
-def add_post_get():
-  return render_template("add_post.html")
+# @app.route("/post/add", methods=["GET"])
+# def add_post_get():
+#   return render_template("add_post.html")
   
-@app.route("/post/add", methods=["POST"])
-def add_post_post():
-  post = Post(
-    title=request.form["title"],
-    content=mistune.markdown(request.form["content"])
-  )
-  session.add(post)
+# @app.route("/post/add", methods=["POST"])
+# def add_post_post():
+#   post = Post(
+#     title=request.form["title"],
+#     content=mistune.markdown(request.form["content"])
+#   )
+#   session.add(post)
+#   session.commit()
+#   return redirect(url_for("posts"))
+  
+@app.route("/post/add", methods=["GET", "POST"])
+def add_post():
+  if request.method == "POST":
+    post = Post(
+      title=request.form["title"],
+      content=request.form["content"]
+    )
+    session.add(post)
+    session.commit()
+    flash("Post added successfully!")
+    return redirect(url_for("posts"))
+  else:
+    return render_template("add_post.html")
+  
+@app.route("/post/<int:post_id>")
+def show_post(post_id):
+  post = session.query(Post).get(post_id)
+  return render_template("show_post.html", post=post)
+  
+@app.route("/post/edit/<int:post_id>", methods=["GET", "POST"])
+def edit_post(post_id):
+  post = session.query(Post).get(post_id)
+  
+  # import pdb;
+  # pdb.set_trace()
+  
+  if request.method == "POST":
+    post.title=request.form["title"]
+    post.content=request.form["content"]
+    session.add(post)
+    session.commit()
+    flash("Post updated successfully!")
+    return redirect(url_for("posts"))
+  
+  return render_template("edit_post.html", post=post)
+
+@app.route("/post/delete/<int:post_id>")
+def delete_post(post_id):
+  # import pdb;
+  # pdb.set_trace()
+  
+  post = session.query(Post).get(post_id)
+  # use some sort of JS script to ask if you really want to delete?!
+  session.delete(post)
   session.commit()
+  flash("Post deleted successfully!")
+  # flash("Post was not deleted!")
+  
   return redirect(url_for("posts"))
+  
+# with app.test_request_context():
+#   print url_for('posts')
+#   print url_for('add_post')
+#   print url_for('show_post', post_id=26)
+#   print url_for('edit_post', post_id=18)
+#   print url_for('delete_post', post_id=6)
