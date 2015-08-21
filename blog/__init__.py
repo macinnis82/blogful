@@ -9,3 +9,4 @@ app.secret_key = 'some_secret'
 
 from . import views
 from . import filters
+from . import login

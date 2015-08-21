@@ -1,10 +1,12 @@
 import mistune
 
 from flask import render_template, request, redirect, url_for, flash
+from flask.ext.login import login_user, login_required, current_user
+from werkzeug.security import check_password_hash
 
 from blog import app
 from .database import session
-from .models import Post
+from .models import Post, User
 
 @app.route("/")
 @app.route("/page/<int:page>")
@@ -49,15 +51,17 @@ def posts(page=1, paginate_by=10):
 #   return redirect(url_for("posts"))
   
 @app.route("/post/add", methods=["GET", "POST"])
+@login_required
 def add_post():
   if request.method == "POST":
     post = Post(
       title=request.form["title"],
-      content=request.form["content"]
+      content=request.form["content"],
+      author=current_user
     )
     session.add(post)
     session.commit()
-    flash("Post added successfully!")
+    flash("Post added successfully!", "success")
     return redirect(url_for("posts"))
   else:
     return render_template("add_post.html")
@@ -68,6 +72,7 @@ def show_post(post_id):
   return render_template("show_post.html", post=post)
   
 @app.route("/post/edit/<int:post_id>", methods=["GET", "POST"])
+@login_required
 def edit_post(post_id):
   post = session.query(Post).get(post_id)
   
@@ -79,12 +84,13 @@ def edit_post(post_id):
     post.content=request.form["content"]
     session.add(post)
     session.commit()
-    flash("Post updated successfully!")
+    flash("Post updated successfully!", "success")
     return redirect(url_for("posts"))
   
   return render_template("edit_post.html", post=post)
 
 @app.route("/post/delete/<int:post_id>")
+@login_required
 def delete_post(post_id):
   # import pdb;
   # pdb.set_trace()
@@ -93,7 +99,7 @@ def delete_post(post_id):
   # use some sort of JS script to ask if you really want to delete?!
   session.delete(post)
   session.commit()
-  flash("Post deleted successfully!")
+  flash("Post deleted successfully!", "success")
   # flash("Post was not deleted!")
   
   return redirect(url_for("posts"))
@@ -104,3 +110,19 @@ def delete_post(post_id):
 #   print url_for('show_post', post_id=26)
 #   print url_for('edit_post', post_id=18)
 #   print url_for('delete_post', post_id=6)
+
+@app.route("/login", methods=["GET"])
+def login_get():
+  return render_template("login.html")
+  
+@app.route("/login", methods=["POST"])
+def login_post():
+  email = request.form["email"]
+  password = request.form["password"]
+  user = session.query(User).filter_by(email=email).first()
+  if not user or not check_password_hash(user.password, password):
+    flash("Incorrect username or password", "danger")
+    return redirect(url_for("login_get"))
+  login_user(user)
+  return redirect(request.args.get('next') or url_for("posts"))
+    
