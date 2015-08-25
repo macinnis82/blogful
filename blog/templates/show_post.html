@@ -3,6 +3,40 @@
 
 {% block content %}
 
-{{ macros.render_single_post(post) }}
+  <div class="row">
+    <div class="col-md-2 text-right metadata">
+        <ul class="list-unstyled">
+            <li> {{ post.datetime | dateformat("%m/%d/%y") }} </li>
+            {% if current_user.name == post.author.name %}
+              <li><a href="{{ url_for('edit_post', post_id=post.id) }}">Edit</a></li>
+              <li><a href="{{ url_for('delete_post', post_id=post.id) }}" class="delete" data-confirm="Are you sure would like to delete?">Delete</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="col-md-10">
+        <h1> 
+          {{ post.title }} 
+        </h1>
+        {{ post.content | safe }}
+        Authored by:  {{ post.author.name }}
+    </div>
+  </div>
+  <!--confirm an delete with a dialog box-->
+  <script>
+    var deleteLinks = document.querySelectorAll('.delete');
+    
+    for (var i = 0; i < deleteLinks.length; i++) {
+      deleteLinks[i].addEventListener('click', function(event) {
+          event.preventDefault();
+    
+          var choice = confirm(this.getAttribute('data-confirm'));
+    
+          if (choice) {
+            window.location.href = this.getAttribute('href');
+            console.log(window.location.href);
+          }
+      });
+    }  
+  </script>
 
 {% endblock %}

@@ -1,8 +1,8 @@
 import mistune
 
 from flask import render_template, request, redirect, url_for, flash
-from flask.ext.login import login_user, login_required, current_user
-from werkzeug.security import check_password_hash
+from flask.ext.login import login_user, login_required, current_user, logout_user
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from blog import app
 from .database import session
@@ -103,13 +103,6 @@ def delete_post(post_id):
   # flash("Post was not deleted!")
   
   return redirect(url_for("posts"))
-  
-# with app.test_request_context():
-#   print url_for('posts')
-#   print url_for('add_post')
-#   print url_for('show_post', post_id=26)
-#   print url_for('edit_post', post_id=18)
-#   print url_for('delete_post', post_id=6)
 
 @app.route("/login", methods=["GET"])
 def login_get():
@@ -124,5 +117,26 @@ def login_post():
     flash("Incorrect username or password", "danger")
     return redirect(url_for("login_get"))
   login_user(user)
+  flash("Welcome back {0}".format(user.name), "success")
   return redirect(request.args.get('next') or url_for("posts"))
-    
+  
+@app.route("/sign_out")
+def sign_out():
+  logout_user()
+  flash("User has been logged out!", "success")
+  return redirect(url_for("posts"))
+  
+@app.route("/register", methods=["GET", "POST"])
+def register():
+  if request.method == "GET":
+    return render_template("register.html")
+  
+  user = User(
+    name=request.form['name'], 
+    email=request.form['email'],
+    password=generate_password_hash(request.form['password'])
+  )
+  session.add(user)
+  session.commit()
+  flash('User successfully registered', "success")
+  return redirect(url_for('login_get'))
