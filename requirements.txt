@@ -14,7 +14,7 @@ argparse==1.2.1
 generateDS==2.16a
 itsdangerous==0.24
 mistune>=0.8.1
-psycopg2==2.6.1
+psycopg2>=2.7.4
 selenium==2.47.1
 splinter==0.7.3
 wsgiref==0.1.2
