@@ -6,8 +6,8 @@ env:
   - CONFIG_PATH=blog.config.TravisConfig
 before_script:
   - psql -c 'create database "blogful-test";' -U postgres
-#script:
-  #- PYTHON_PATH=. python tests/test_filters.py
+script:
+  - PYTHON_PATH=. python tests/test_filter.py
   #- PYTHON_PATH=. python tests/test_views_integration.py
   #- PYTHON_PATH=. python tests/test_views_acceptance.py
   # Add any other tests here
